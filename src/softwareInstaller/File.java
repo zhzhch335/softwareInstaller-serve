@@ -21,9 +21,11 @@ public class File {
 	 * @throws IOException 写入异常      
 	 * @return: void      
 	 */  
-	public static void createKeyFile(String url, String key) throws IOException {
+	public static void createKeyFile(String url, KeyCipher key) throws IOException {
 		Writer wr = new FileWriter(url);
-		wr.append(key);
+		wr.append(byteArrayToHexString(key.result)+'\n');
+		wr.append(key.modulus+'\n');
+		wr.append(key.prikey);
 		wr.close();
 	}
 
@@ -34,12 +36,40 @@ public class File {
 	 * @throws IOException   读取异常   
 	 * @return: String      
 	 */   
-	public static String loadMachineFile(String url) throws IOException {
-		byte[] keybyte= {};
-		FileInputStream fis=new FileInputStream(url);
-		fis.read(keybyte);
-		String key =new String(keybyte);
-		fis.close();
+	public static String[] loadMachineFile(String url) throws IOException {
+		String[] key=new String[3];
+		FileReader fr=new FileReader(url);
+		BufferedReader br=new BufferedReader(fr);
+		key[0]=br.readLine();
+		key[1]=br.readLine();
+		key[2]=br.readLine();
+		br.close();
 		return key;
+	}
+	
+	public static String byteArrayToHexString(byte[] b) {
+		String result="";
+		String tempresult="";
+		for(Byte i : b) {
+			tempresult=Integer.toHexString(i.intValue()+128);
+			if(tempresult.length()==1) {
+				tempresult="0"+tempresult;
+			}
+			result=result+tempresult;
+		}
+		return result;
+		
+	}
+	
+	static byte[] hexStringToByteArray(String s) {
+		String[] arr=s.split("");
+		byte[] result=new byte[arr.length/2];
+		int k=0;
+		for(int i=0;i<=arr.length-2;i=i+2) {
+			int tempint=Integer.parseInt(arr[i]+arr[i+1], 16)-128;
+			result[k]=(byte)tempint;
+			k++;
+		}
+		return result;
 	}
 }

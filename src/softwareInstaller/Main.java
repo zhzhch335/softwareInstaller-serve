@@ -1,9 +1,20 @@
 package softwareInstaller;
 
 import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateKeySpec;
 import java.util.*;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import sun.org.mozilla.javascript.internal.xml.XMLLib.Factory;
 
 /**
  * @describe 主控类，用于调用加密函数以及与数据类通信
@@ -33,9 +44,14 @@ public final class Main {
 	 * @throws IOException 写入异常
 	 * @throws NoSuchAlgorithmException 字典查找失败异常      
 	 * @return: void      
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws InvalidKeyException 
+	 * @throws InvalidKeySpecException 
 	 */  
-	public static void createKey(String path,String[] info) throws IOException, NoSuchAlgorithmException {
-		String accessKey=dataEncode(info[0],info[1],info[2],info[3]);
+	public static void createKey(String path,String mKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
+		KeyCipher accessKey=dataEncode(mKey);
 		File.createKeyFile(path, accessKey);
 	};
 
@@ -47,15 +63,8 @@ public final class Main {
 	 * @return: boolean      
 	 */  
 	public static String[] loadMachineKey(String path) throws IOException {
-		String[] info= {};
-		String loadKey = File.loadMachineFile(path);
-		Scanner sc=new Scanner(loadKey);
-		info[0]=sc.next("++");
-		info[1]=sc.next("++");
-		info[2]=sc.next("++");
-		info[3]=sc.next("++");
-		sc.close();
-		return info;
+		String[] mKey = File.loadMachineFile(path);
+		return mKey;
 	};
 
 	/*
@@ -91,27 +100,76 @@ public final class Main {
 	 * 
 	 */
 	
-	/**   
-	 * @Title: dataEncode   
-	 * @Description:  SHA加密，使用哈希算法获取序列号
-	 * @param cpuId
-	 * @param diskId
-	 * @param softwareVersion
-	 * @param functionSwitch
-	 * @throws NoSuchAlgorithmException 未找到字典异常      
-	 * @return: String      返回值为32长度的字符串
-	 */  
-	private static String dataEncode(String cpuId, String diskId, String softwareVersion, String functionSwitch)
-			throws NoSuchAlgorithmException {
-		String key = "";
-		String oriStr = cpuId + diskId + softwareVersion + functionSwitch;
-		MessageDigest md = MessageDigest.getInstance("SHA");
-		byte[] bkey = md.digest(oriStr.getBytes());
-		for (byte i : bkey) {
-			key = key + Integer.toHexString((i & 0x000000FF)|0xFFFFFF00).substring(6);
+  
+	private static KeyCipher dataEncode(String mKey)
+			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidKeySpecException {
+		System.out.println("加密时的字符串为："+mKey);
+		System.out.println("加密时的byte数组的第1 3 5个索引为："+mKey.getBytes("UTF-8")[1]+"、"+mKey.getBytes("UTF-8")[3]+"、"+mKey.getBytes("UTF-8")[5]);
+		KeyCipher key=new KeyCipher();
+		KeyPairGenerator keyGene=KeyPairGenerator.getInstance("RSA");/*密钥生成器*/
+		keyGene.initialize(1024);/*指定密钥大小*/
+		KeyPair kp=keyGene.generateKeyPair();/*生成密钥*/
+		PrivateKey priKey=kp.getPrivate();/*获取私钥*/
+		PublicKey pubKey=kp.getPublic();/*获取公钥*/
+		RSAPublicKey rsaPubKey=(RSAPublicKey)pubKey;/*转化为RSA私钥用于获取m和e*/
+		RSAPrivateKey rsaPriKey=(RSAPrivateKey)priKey;/*转化为RSA私钥用于获取m和e*/
+		BigInteger modulus=rsaPubKey.getModulus();/*获取模*/
+		Cipher cp=Cipher.getInstance("RSA");/*加密器实例化*/
+		cp.init(Cipher.ENCRYPT_MODE, pubKey);/*加密器配置*/
+		byte[] mkey1=mKey.getBytes();
+		key.result=cp.doFinal(mkey1);/*加密结果返回*/
+		key.prikey=String.valueOf(rsaPriKey.getPrivateExponent());/*私钥返回*/
+		key.pubkey=String.valueOf(rsaPubKey.getPublicExponent());/*公钥返回*/
+		key.modulus=String.valueOf(modulus);/*模返回*/
+		
+		//直接解密测试
+		RSAPrivateKeySpec rsaspec1=new RSAPrivateKeySpec(new BigInteger(key.modulus),new BigInteger(key.prikey));
+		KeyFactory factory1=KeyFactory.getInstance("RSA");
+		PrivateKey n_pri1=factory1.generatePrivate(rsaspec1);
+		Cipher cp3=Cipher.getInstance("RSA");
+		cp3.init(Cipher.DECRYPT_MODE, n_pri1);
+		byte[] mkey3=cp3.doFinal(key.result);
+		System.out.println("直接解密的结果是："+new String(mkey3));
+		System.out.println(new String(mKey.getBytes()));
+		try {
+			File.createKeyFile("C:\\Users\\Administrator\\Desktop\\nkey.key", key);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
-		return key.toUpperCase();
+		
+		//读文件测试
+		KeyCipher key1 = new KeyCipher();
+		Reader isr;
+		try {
+			isr = new FileReader("C:\\Users\\Administrator\\Desktop\\nkey.key");
+			BufferedReader br = new BufferedReader(isr);
+			String result=br.readLine();
+			System.out.println(result.split("")[0]);
+			key1.result = File.hexStringToByteArray(result);/*读取加密后的字符*/
+			key1.modulus = br.readLine();/*读取模*/
+			key1.prikey = br.readLine();/*读取d*/
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		//读文件解密测试
+		RSAPrivateKeySpec rsaspec=new RSAPrivateKeySpec(new BigInteger(key1.modulus),new BigInteger(key1.prikey));
+		KeyFactory factory=KeyFactory.getInstance("RSA");
+		PrivateKey n_pri=factory.generatePrivate(rsaspec);
+		Cipher cp1=Cipher.getInstance("RSA");
+		cp1.init(Cipher.DECRYPT_MODE, n_pri);
+		byte[] mkey2=cp1.doFinal(key.result);
+		System.out.println("直接解密的结果是："+new String(mkey2));
+		System.out.println(new String(mKey.getBytes()));
+		
+		
+		return key;
 	}
+	
 
 	/**   
 	 * @Title: setSoftwareVersion   
@@ -132,5 +190,12 @@ public final class Main {
 	public static void setFuncationSwitch(String funcationSwitch) {
 		Main.funcationSwitch = funcationSwitch;
 	}
+	
 
+}
+class KeyCipher{
+	public String prikey;
+	public String pubkey;
+	public String modulus;
+	public byte[] result;
 }
