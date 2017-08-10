@@ -6,15 +6,10 @@ import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPrivateKeySpec;
-import java.util.*;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-
-import sun.org.mozilla.javascript.internal.xml.XMLLib.Factory;
 
 /**
  * @describe 主控类，用于调用加密函数以及与数据类通信
@@ -105,7 +100,7 @@ public final class Main {
 			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidKeySpecException {
 		KeyCipher key=new KeyCipher();
 		KeyPairGenerator keyGene=KeyPairGenerator.getInstance("RSA");/*密钥生成器*/
-		keyGene.initialize(1024);/*指定密钥大小*/
+		keyGene.initialize(2048);/*指定密钥大小*/
 		KeyPair kp=keyGene.generateKeyPair();/*生成密钥*/
 		PrivateKey priKey=kp.getPrivate();/*获取私钥*/
 		PublicKey pubKey=kp.getPublic();/*获取公钥*/

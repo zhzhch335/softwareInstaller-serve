@@ -50,6 +50,17 @@ public class File {
 	public static String byteArrayToHexString(byte[] b) {
 		String result="";
 		String tempresult="";
+		try {
+			FileWriter wr=new FileWriter("C:\\Users\\Administrator\\Desktop\\bytearraytohexString.txt");
+			wr.append("原始的byte数组是：");
+			for(Byte j :b) {
+				wr.append(j.toString()+" ");
+			}
+			wr.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		for(Byte i : b) {
 			tempresult=Integer.toHexString(i.intValue()+128);
 			if(tempresult.length()==1) {
@@ -57,19 +68,10 @@ public class File {
 			}
 			result=result+tempresult;
 		}
+		System.out.println("转换后的字符串是："+result);
 		return result;
 		
 	}
 	
-	static byte[] hexStringToByteArray(String s) {
-		String[] arr=s.split("");
-		byte[] result=new byte[arr.length/2];
-		int k=0;
-		for(int i=0;i<=arr.length-2;i=i+2) {
-			int tempint=Integer.parseInt(arr[i]+arr[i+1], 16)-128;
-			result[k]=(byte)tempint;
-			k++;
-		}
-		return result;
-	}
+
 }
