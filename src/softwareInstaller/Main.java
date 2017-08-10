@@ -51,7 +51,7 @@ public final class Main {
 	 * @throws InvalidKeySpecException 
 	 */  
 	public static void createKey(String path,String mKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
-		KeyCipher accessKey=dataEncode(mKey);
+		KeyCipher accessKey=dataEncode(mKey+" "+Main.softwareVersion+" "+Main.funcationSwitch);
 		File.createKeyFile(path, accessKey);
 	};
 
@@ -103,8 +103,6 @@ public final class Main {
   
 	private static KeyCipher dataEncode(String mKey)
 			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidKeySpecException {
-		System.out.println("加密时的字符串为："+mKey);
-		System.out.println("加密时的byte数组的第1 3 5个索引为："+mKey.getBytes("UTF-8")[1]+"、"+mKey.getBytes("UTF-8")[3]+"、"+mKey.getBytes("UTF-8")[5]);
 		KeyCipher key=new KeyCipher();
 		KeyPairGenerator keyGene=KeyPairGenerator.getInstance("RSA");/*密钥生成器*/
 		keyGene.initialize(1024);/*指定密钥大小*/
@@ -120,53 +118,7 @@ public final class Main {
 		key.result=cp.doFinal(mkey1);/*加密结果返回*/
 		key.prikey=String.valueOf(rsaPriKey.getPrivateExponent());/*私钥返回*/
 		key.pubkey=String.valueOf(rsaPubKey.getPublicExponent());/*公钥返回*/
-		key.modulus=String.valueOf(modulus);/*模返回*/
-		
-		//直接解密测试
-		RSAPrivateKeySpec rsaspec1=new RSAPrivateKeySpec(new BigInteger(key.modulus),new BigInteger(key.prikey));
-		KeyFactory factory1=KeyFactory.getInstance("RSA");
-		PrivateKey n_pri1=factory1.generatePrivate(rsaspec1);
-		Cipher cp3=Cipher.getInstance("RSA");
-		cp3.init(Cipher.DECRYPT_MODE, n_pri1);
-		byte[] mkey3=cp3.doFinal(key.result);
-		System.out.println("直接解密的结果是："+new String(mkey3));
-		System.out.println(new String(mKey.getBytes()));
-		try {
-			File.createKeyFile("C:\\Users\\Administrator\\Desktop\\nkey.key", key);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		//读文件测试
-		KeyCipher key1 = new KeyCipher();
-		Reader isr;
-		try {
-			isr = new FileReader("C:\\Users\\Administrator\\Desktop\\nkey.key");
-			BufferedReader br = new BufferedReader(isr);
-			String result=br.readLine();
-			System.out.println(result.split("")[0]);
-			key1.result = File.hexStringToByteArray(result);/*读取加密后的字符*/
-			key1.modulus = br.readLine();/*读取模*/
-			key1.prikey = br.readLine();/*读取d*/
-			br.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		//读文件解密测试
-		RSAPrivateKeySpec rsaspec=new RSAPrivateKeySpec(new BigInteger(key1.modulus),new BigInteger(key1.prikey));
-		KeyFactory factory=KeyFactory.getInstance("RSA");
-		PrivateKey n_pri=factory.generatePrivate(rsaspec);
-		Cipher cp1=Cipher.getInstance("RSA");
-		cp1.init(Cipher.DECRYPT_MODE, n_pri);
-		byte[] mkey2=cp1.doFinal(key.result);
-		System.out.println("直接解密的结果是："+new String(mkey2));
-		System.out.println(new String(mKey.getBytes()));
-		
-		
+		key.modulus=String.valueOf(modulus);/*模返回*/		
 		return key;
 	}
 	

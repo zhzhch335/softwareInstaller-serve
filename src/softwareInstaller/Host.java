@@ -290,7 +290,7 @@ public class Host {
 				JFileChooser chooser = new JFileChooser(fsv);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("机器码文件 .mkey", "mkey");
 				chooser.setFileFilter(filter);/* 设置并加载新的文件过滤器 */
-				int returnVal = chooser.showSaveDialog(dialog);
+				int returnVal = chooser.showOpenDialog(dialog);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					try {
 						String[] mKey = Main.loadMachineKey(chooser.getSelectedFile().getPath());
@@ -305,10 +305,39 @@ public class Host {
 							Main.setFuncationSwitch("false");
 							SubstanceLookAndFeel.setSkin(new BusinessBlueSteelSkin());
 						}
+						vText.setEnabled(true);
 						fSwitch.setEnabled(true);
 						init.setEnabled(true);
-					} catch (IOException e1) {
-						JOptionPane.showMessageDialog(dialog, "读取机器码信息失败，请稍后或更换路径再试", "错误", JOptionPane.ERROR_MESSAGE);
+						init.addMouseListener(new MouseAdapter() {/* 机器码文件调用成功后才能进行生成 */
+							/**
+							 * Title: mouseClicked Description: 鼠标点击调用生成密钥方法
+							 * 
+							 * @param e
+							 *            鼠标响应事件
+							 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
+							 */
+							public void mouseClicked(MouseEvent e) {
+								try {
+									try {
+										String mKey = mKeyText.getText();							
+										Main.createKey(initText.getText(), mKey);
+									} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
+											| IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException
+											| NullPointerException e1) {
+										e1.printStackTrace();
+									}
+									JOptionPane.showMessageDialog(dialog, "写入文件成功，写入路径为" + initText.getText(), "完成",
+											JOptionPane.INFORMATION_MESSAGE);
+								} catch (IOException e1) {
+									JOptionPane.showMessageDialog(dialog, "路径错误或无权限写入文件，请稍后或更换路径再试", "错误",
+											JOptionPane.ERROR_MESSAGE);
+								}
+							}
+						});
+					} catch (IOException | NullPointerException e1) {
+						mKeyText.setText("获取失败");
+						vText.setText("获取失败");
+						JOptionPane.showMessageDialog(dialog, "读取机器码信息失败，请稍后或更换路径再试", "错误", JOptionPane.ERROR_MESSAGE);						
 					}
 
 				}
@@ -320,34 +349,6 @@ public class Host {
 		// 生成按钮
 
 		init.setEnabled(false);/* 未获取机器码时不可用 */
-		init.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		init.addMouseListener(new MouseAdapter() {
-			/**
-			 * Title: mouseClicked Description: 鼠标点击调用生成密钥方法
-			 * 
-			 * @param e
-			 *            鼠标响应事件
-			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
-			 */
-			public void mouseClicked(MouseEvent e) {
-				try {
-					try {
-						String mKey = mKeyText.getText();
-						Main.createKey(initText.getText(), mKey);
-					} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
-							| IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException e1) {
-						e1.printStackTrace();
-					}
-					JOptionPane.showMessageDialog(dialog, "写入文件成功，写入路径为" + initText.getText(), "完成",
-							JOptionPane.INFORMATION_MESSAGE);
-				} catch (IOException e1) {
-					JOptionPane.showMessageDialog(dialog, "路径错误或无权限写入文件，请稍后或更换路径再试", "错误", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		});
 		init.setBounds(361, 346, 69, 23);
 		frmHey.getContentPane().add(init);
 
@@ -361,7 +362,7 @@ public class Host {
 		 */
 		JTextPane txtpnkey = new JTextPane();
 		txtpnkey.setText(
-				"\r\n\r\n\r\n\r\n    生成说明：\r\n     1、选择你需要的配置，选择一个位置生成好你的注册文件(后缀名.key)\r\n     2、选择激活选项，载入您刚刚生成的密钥文件");
+				"\r\n\r\n\r\n\r\n    生成说明：\r\n     1、载入机器码文件获取机器码及软件配置信息\r\n     2、核对购买信息后生成注册文件");
 		txtpnkey.setEditable(false);
 		txtpnkey.setBounds(0, 0, 169, 399);
 		frmHey.getContentPane().add(txtpnkey);
@@ -381,9 +382,13 @@ public class Host {
 				JFileChooser chooser = new JFileChooser(fsv);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("注册文件 .key", "key");
 				chooser.setFileFilter(filter);/* 设置并加载新的文件过滤器 */
-				int returnVal = chooser.showOpenDialog(dialog);
+				int returnVal = chooser.showSaveDialog(dialog);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					initText.setText(chooser.getSelectedFile().getPath());
+					String url=chooser.getSelectedFile().getPath();
+					if (!url.endsWith(".key")) {
+						url = url + ".key";
+					}
+					initText.setText(url);
 				}
 			}
 		});
