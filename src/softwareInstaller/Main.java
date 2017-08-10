@@ -14,8 +14,8 @@ import javax.crypto.NoSuchPaddingException;
 /**
  * @describe 主控类，用于调用加密函数以及与数据类通信
  * @author Zhao Zhichen
- * @time 2017.08.07 下午2:26:52
- * @version softwareInstaller.17.08.07
+ * @time 2017.08.10 下午1:07:58
+ * @version softwareInstaller for serve.17.08.10
  * @see	
  */
 public final class Main {

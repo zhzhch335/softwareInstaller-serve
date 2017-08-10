@@ -27,10 +27,10 @@ import java.awt.event.FocusEvent;
 import java.awt.Toolkit;
 
 /**
- * @describe UI类 用于呈现用户窗体以及密码验证
+ * @describe 服务端UI类，用于读取机器码生成注册文件
  * @author Zhao Zhichen
- * @time 2017.08.07 下午2:24:57
- * @version softwareInstaller.17.08.07
+ * @time 2017.08.10 下午1:06:23
+ * @version softwareInstaller for serve.17.08.10
  * @see
  */
 public class Host {
@@ -318,7 +318,7 @@ public class Host {
 							public void mouseClicked(MouseEvent e) {
 								try {
 									try {
-										String mKey = mKeyText.getText();							
+										String mKey = mKeyText.getText();
 										Main.createKey(initText.getText(), mKey);
 									} catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
 											| IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException
@@ -336,7 +336,7 @@ public class Host {
 					} catch (IOException | NullPointerException e1) {
 						mKeyText.setText("获取失败");
 						vText.setText("获取失败");
-						JOptionPane.showMessageDialog(dialog, "读取机器码信息失败，请稍后或更换路径再试", "错误", JOptionPane.ERROR_MESSAGE);						
+						JOptionPane.showMessageDialog(dialog, "读取机器码信息失败，请稍后或更换路径再试", "错误", JOptionPane.ERROR_MESSAGE);
 					}
 
 				}
@@ -346,7 +346,6 @@ public class Host {
 		frmHey.getContentPane().add(loadMkeyFile);
 
 		// 生成按钮
-
 		init.setEnabled(false);/* 未获取机器码时不可用 */
 		init.setBounds(361, 346, 69, 23);
 		frmHey.getContentPane().add(init);
@@ -360,8 +359,7 @@ public class Host {
 		 * 
 		 */
 		JTextPane txtpnkey = new JTextPane();
-		txtpnkey.setText(
-				"\r\n\r\n\r\n\r\n    生成说明：\r\n     1、载入机器码文件获取机器码及软件配置信息\r\n     2、核对购买信息后生成注册文件");
+		txtpnkey.setText("\r\n\r\n\r\n\r\n    生成说明：\r\n     1、载入机器码文件获取机器码及软件配置信息\r\n     2、核对购买信息后生成注册文件");
 		txtpnkey.setEditable(false);
 		txtpnkey.setBounds(0, 0, 169, 399);
 		frmHey.getContentPane().add(txtpnkey);
@@ -383,7 +381,7 @@ public class Host {
 				chooser.setFileFilter(filter);/* 设置并加载新的文件过滤器 */
 				int returnVal = chooser.showSaveDialog(dialog);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					String url=chooser.getSelectedFile().getPath();
+					String url = chooser.getSelectedFile().getPath();
 					if (!url.endsWith(".key")) {
 						url = url + ".key";
 					}
